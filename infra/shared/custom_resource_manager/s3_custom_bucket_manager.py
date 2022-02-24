@@ -1,10 +1,13 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from boto3 import resource
+import boto3
+
+resource = boto3.session.Session(profile_name="cardess-dev").resource
+
 from os import getenv
 
-s3_resource = resource('s3')
+s3_resource = resource('s3', region_name="eu-central-1")
 
 
 def lambda_handler(event, context):

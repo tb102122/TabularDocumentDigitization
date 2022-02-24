@@ -2,10 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from urllib.parse import urlparse
-from boto3        import client, resource
+import boto3
 
-client = client('sagemaker')
-s3     = resource('s3')
+client = boto3.session.Session(profile_name="cardess-dev").client
+resource = boto3.session.Session(profile_name="cardess-dev").resource
+
+client = client('sagemaker', region_name="eu-central-1")
+s3 = resource('s3', region_name="eu-central-1")
 
 
 def uri_to_s3_obj(s3_uri):
@@ -30,14 +33,15 @@ def fetch_s3(s3_uri):
 
 
 def lambda_handler(event, context):
-    
+
     request_type = event['RequestType']
-    
+
     if request_type == 'Create': return on_create(event)
     if request_type == 'Update': return on_update(event)
     if request_type == 'Delete': return on_delete(event)
 
     raise Exception('Invalid request type: %s' % request_type)
+
 
 def on_create(event):
     props = event['ResourceProperties']
@@ -47,21 +51,19 @@ def on_create(event):
 
     name = props['HumanTaskUiName']
     response = client.create_human_task_ui(
-        HumanTaskUiName = name,
-        UiTemplate = {
-            'Content': worker_template
-        },
+        HumanTaskUiName=name,
+        UiTemplate={'Content': worker_template},
     )
     print('Create worker template response: ', response)
 
-  # add your create code here...
+    # add your create code here...
     physical_id = name
 
     return {'PhysicalResourceId': physical_id}
 
 
 def on_update(event):
-  # delete and re-create but keep the name the same.
+    # delete and re-create but keep the name the same.
     on_delete(event)
     return on_create(event)
 
@@ -69,7 +71,5 @@ def on_update(event):
 def on_delete(event):
     physical_id = event['PhysicalResourceId']
 
-    response = client.delete_human_task_ui(
-        HumanTaskUiName = physical_id
-    )
+    response = client.delete_human_task_ui(HumanTaskUiName=physical_id)
     print(response)

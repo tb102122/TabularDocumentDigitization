@@ -1,15 +1,15 @@
 {
-  "app": "python3 app.py",
+  "app": "python3.8 app.py",
   "requireApproval": "never",
   "context": {
     "@aws-cdk/core:enableStackNameDuplicates": "true",
     "aws-cdk:enableDiffNoFail": "true",
     "ENVIRONMENTS": {
       "WORK_TEAM_NAMES": [
-          "primary",
-          "quality"
+        "primary",
+        "quality"
       ]
     }
   },
-  "output" : ".cdk.out"
+  "output": ".cdk.out"
 }

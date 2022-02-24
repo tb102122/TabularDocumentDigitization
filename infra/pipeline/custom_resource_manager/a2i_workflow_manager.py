@@ -1,10 +1,13 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from time  import sleep
-from boto3 import client
+from time import sleep
+import boto3
 
-client = client('sagemaker')
+client = boto3.session.Session(profile_name="cardess-dev").client
+
+client = client('sagemaker', region_name="eu-central-1")
+
 
 def lambda_handler(event, context):
 
@@ -12,32 +15,28 @@ def lambda_handler(event, context):
 
     request_type = event['RequestType']
 
-    if  request_type == 'Create': return on_create(event)
-    if  request_type == 'Update': return on_update(event)
-    if  request_type == 'Delete': return on_delete(event)
+    if request_type == 'Create': return on_create(event)
+    if request_type == 'Update': return on_update(event)
+    if request_type == 'Delete': return on_delete(event)
 
     raise Exception('Invalid request type: %s' % request_type)
 
+
 def on_create(event):
 
-    props    = event['ResourceProperties']
+    props = event['ResourceProperties']
 
     response = client.create_flow_definition(
-        FlowDefinitionName = props['FlowDefinitionName'],
-        HumanLoopConfig    =
-        {
-            'WorkteamArn'     : props['WorkteamArn'],
-            'HumanTaskUiArn'  : props['HumanTaskUiArn'],
-            'TaskTitle'       : props['TaskTitle'],
-            'TaskDescription' : props['TaskDescription'],
-            'TaskCount'       : int(props['TaskCount'])
+        FlowDefinitionName=props['FlowDefinitionName'],
+        HumanLoopConfig={
+            'WorkteamArn': props['WorkteamArn'],
+            'HumanTaskUiArn': props['HumanTaskUiArn'],
+            'TaskTitle': props['TaskTitle'],
+            'TaskDescription': props['TaskDescription'],
+            'TaskCount': int(props['TaskCount'])
         },
-        RoleArn            = props['RoleArn'],
-        OutputConfig       =
-        {
-            'S3OutputPath' : props['S3OutputPath']
-        }
-    )
+        RoleArn=props['RoleArn'],
+        OutputConfig={'S3OutputPath': props['S3OutputPath']})
     print('Create worker flow definition response: ', response)
 
     physical_id = props['FlowDefinitionName']
@@ -46,7 +45,7 @@ def on_create(event):
 
 def on_update(event):
 
-  # delete and re-create but keep the name the same.
+    # delete and re-create but keep the name the same.
     on_delete(event)
     return on_create(event)
 
@@ -56,9 +55,10 @@ def on_delete(event):
     props = event['ResourceProperties']
 
     while True:
-        try :
+        try:
             print('Deleting : ' + props['FlowDefinitionName'])
-            response = client.delete_flow_definition(FlowDefinitionName = props['FlowDefinitionName'])
+            response = client.delete_flow_definition(
+                FlowDefinitionName=props['FlowDefinitionName'])
             sleep(5)
-        except client.exceptions.ResourceNotFound :
+        except client.exceptions.ResourceNotFound:
             break
