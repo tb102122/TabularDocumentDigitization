@@ -1,27 +1,24 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-import boto3
-
-resource = boto3.session.Session(profile_name="cardess-dev").resource
-
+from boto3 import resource
 from os import getenv
 
-s3_resource = resource('s3', region_name="eu-central-1")
+s3_resource = resource("s3")
 
 
 def lambda_handler(event, context):
     print(event)
 
-    request_type = event['RequestType']
+    request_type = event["RequestType"]
 
-    if request_type == 'Create':
-        return {'Status': 'Created'}
-    if request_type == 'Update':
-        return {'Status': 'Updated'}
-    if request_type == 'Delete':
+    if request_type == "Create":
+        return {"Status": "Created"}
+    if request_type == "Update":
+        return {"Status": "Updated"}
+    if request_type == "Delete":
         return on_delete(event)
-    raise Exception('Invalid Request Type: %s' % request_type)
+    raise Exception("Invalid Request Type: %s" % request_type)
 
 
 def on_delete(event):
@@ -33,4 +30,4 @@ def on_delete(event):
     while bucket.objects.all() and sum(1 for _ in bucket.objects.all()) > 0:
         bucket.objects.all().delete()
 
-    return {'Status': 'Deleted'}
+    return {"Status": "Deleted"}
